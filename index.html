@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pricing the slow road</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Pricing the slow road</h1>
+      <p class="lede">Human drivers always take the fastest road. People hailing self-driving rides pick a route by time and price, or walk. Set the prices and watch congestion move.</p>
+    </div>
+    <div class="preset">
+      <label for="preset">Network</label>
+      <select id="preset">
+        <option value="shines">Pricing shines</option>
+        <option value="little">Little room to improve</option>
+        <option value="walks">Short trips</option>
+      </select>
+      <p class="preset-desc" id="presetDesc"></p>
+    </div>
+  </header>
+
+  <div class="roadfield" role="img" aria-label="Three parallel roads between the same start and end, with cars flowing on each">
+    <svg id="roads" viewBox="0 0 1000 430" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="walkers" id="walkers"></div>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--human)"></i>Human driver</span>
+    <span><i class="dot" style="background:var(--av)"></i>Self-driving ride</span>
+    <span><i class="swatch" style="background:var(--free)"></i>Free-flowing</span>
+    <span><i class="swatch" style="background:linear-gradient(90deg,#F29A9A,#B3202A)"></i>Congested (darker is slower)</span>
+  </div>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-controls">
+      <h2 id="h-controls">Your prices</h2>
+      <p class="hint">Only ride riders pay. Cheaper routes attract more of them; human drivers then re-sort onto whatever is fastest.</p>
+      <div class="group" id="priceCtls"></div>
+      <div class="group">
+        <h3>Traffic</h3>
+        <div class="ctl">
+          <label for="humans">Human drivers</label><output id="humansOut"></output>
+          <input type="range" id="humans" min="0" max="60" step="1">
+          <small>Cars per minute. They never pay and always take the fastest road.</small>
+        </div>
+        <div class="ctl">
+          <label for="avs">People who want a ride</label><output id="avsOut"></output>
+          <input type="range" id="avs" min="0" max="80" step="1">
+          <small>Per minute. Each one rides or walks, depending on the deal.</small>
+        </div>
+        <div class="ctl">
+          <label for="vot">Riders’ value of time</label><output id="votOut"></output>
+          <input type="range" id="vot" min="6" max="60" step="1">
+          <small>Typical rider’s worth of an hour. Riders vary around this, as in the paper’s learned preferences.</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-results" aria-live="polite">
+      <h2 id="h-results">Average trip</h2>
+      <div id="results"></div>
+
+      <div class="optimizer">
+        <h3>Let the optimizer set prices</h3>
+        <div class="ctl">
+          <label for="theta">How much serving riders matters</label><output id="thetaOut"></output>
+          <input type="range" id="theta" min="0" max="20" step="0.5">
+          <small>Extra minutes of average trip time worth accepting to serve every rider (the paper’s θ). At 0 it may price riders off the road.</small>
+        </div>
+        <button id="optBtn" type="button">Optimize prices</button>
+        <p class="opt-status" id="optStatus"></p>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>A simplified version of Bıyık, Lazar, Pedarsani &amp; Sadigh, “Incentivizing Efficient Equilibria in Traffic Networks with Mixed Autonomy” (2021). Three parallel roads use the paper’s traffic equations: self-driving cars follow more closely, so roads hold more of them before congesting. Human drivers settle into the best selfish outcome; riders choose with a logit model; rides must at least cover fuel costs.</p>
+    <p>The comparison bar shows the same number of cars if everyone simply took the fastest road. Numbers illustrate the idea rather than reproduce the paper’s results.</p>
+  </footer>
+</div>
+
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
