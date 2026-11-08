@@ -57,6 +57,9 @@ body {
 header.top { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
 h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.02; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; }
 .lede { margin: 0; color: var(--muted); max-width: 60ch; }
+.cite { margin: 8px 0 0; color: var(--muted); font-size: 13px; max-width: 72ch; }
+.cite a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.cite a:hover { color: var(--ink); }
 .preset { display: flex; flex-direction: column; gap: 4px; min-width: 240px; }
 .preset label { font-weight: 600; font-size: 14px; }
 select {
@@ -117,6 +120,3 @@ button:hover { filter: brightness(1.08); }
 button:disabled { opacity: 0.6; cursor: progress; }
 .opt-status { font-size: 14px; color: var(--muted); margin: 10px 0 0; min-height: 1.5em; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-
-footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 14px; max-width: 80ch; }
-footer p { margin: 0 0 8px; }
