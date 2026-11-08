@@ -182,7 +182,7 @@ function renderRoads() {
 function renderResults() {
   const box = $("results");
   if (!out.feasible) {
-    box.innerHTML = `<p class="warn">These roads can’t carry this many cars. Lower the number of human drivers or riders.</p>`;
+    box.innerHTML = `<p class="warn">Traffic can’t settle at these prices: too many riders crowd onto one road that can’t hold them alongside the human drivers. Spread the prices out, or lower the number of drivers or riders.</p>`;
     $("walkers").innerHTML = "";
     return;
   }

@@ -84,7 +84,8 @@ function simulate(sc, prices, riders) {
   let lat = roads.map(r => r.a);
   let q = choiceShares(lat, prices, sc.walkMin, riders);
   let res = null, fa = null, turnedAway = 0;
-  for (let it = 0; it < 160; it++) {
+  let eta = 0.25, lastOk = null;
+  for (let it = 0; it < 260; it++) {
     fa = q.slice(0, n).map(x => x * lamA);
     turnedAway = 0;
     fa = fa.map((f, i) => {
@@ -93,11 +94,21 @@ function simulate(sc, prices, riders) {
       return f;
     });
     res = humanEquilibrium(roads, fa, lamH);
-    if (!res.feasible) break;
-    lat = res.lat;
+    if (!res.feasible) {
+      // Overloaded split: treat crowded roads as slow so riders re-choose, instead of giving up
+      lat = roads.map((r, i) => {
+        const load = Math.min(1.5, (fa[i] * r.ha + lamH / roads.length * r.hh) / (r.v * r.b));
+        return r.a * (1 + 2 * Math.pow(load, 4));
+      });
+      eta = Math.max(0.05, eta * 0.8);   // smaller steps after an overshoot
+    } else {
+      lat = res.lat;
+      lastOk = { res, fa: fa.slice(), turnedAway, q: q.slice() };
+    }
     const qn = choiceShares(lat, prices, sc.walkMin, riders);
-    q = q.map((x, i) => x + 0.25 * (qn[i] - x));
+    q = q.map((x, i) => x + eta * (qn[i] - x));
   }
+  if ((!res || !res.feasible) && lastOk) { res = lastOk.res; fa = lastOk.fa; turnedAway = lastOk.turnedAway; q = lastOk.q; }
   if (!res || !res.feasible) return { feasible: false };
   const served = fa.reduce((A, B) => A + B, 0);
   let num = 0, den = 0;
