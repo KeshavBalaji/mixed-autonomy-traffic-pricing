@@ -5,7 +5,7 @@ const PRESETS = {
       3: [{ km: 4, kmh: 40, lanes: 1 }, { km: 6, kmh: 50, lanes: 1 }, { km: 14, kmh: 70, lanes: 2 }],
       4: [{ km: 4, kmh: 40, lanes: 1 }, { km: 6, kmh: 50, lanes: 1 }, { km: 9, kmh: 60, lanes: 1 }, { km: 14, kmh: 70, lanes: 2 }],
     },
-    humans: 30, avs: 40, vot: 24, walkMin: 45, price: 6,
+    humans: 30, avs: 42, vot: 24, walkMin: 45, price: 6,
   },
   little: {
     desc: "Traffic is light, so the fastest road can carry almost everyone.",
@@ -26,7 +26,7 @@ const PRESETS = {
 };
 
 const $ = id => document.getElementById(id);
-const state = { preset: "shines", nroads: 3, prices: [6, 6, 6], humans: 30, avs: 40, vot: 24, theta: 5 };
+const state = { preset: "shines", nroads: 3, prices: [6, 6, 6], humans: 30, avs: 42, vot: 24, theta: 5 };
 let scenario, riders, out;
 
 function buildScenario() {

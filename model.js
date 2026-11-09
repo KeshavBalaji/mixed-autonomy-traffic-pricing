@@ -2,15 +2,16 @@
 // Units: seconds, meters, cars/second internally.
 
 const CAR = 5, GAP = 2, T_H = 2, T_A = 1; // car length, min gap, headways (paper's implementation details)
+const PRICE_W = 0.4;                       // riders' price weight ω2 per dollar; time weight ω1 = value of time × ω2
 
 function makeRoad(r) {
   const d = r.km * 1000, v = r.kmh / 3.6, b = r.lanes;
   return {
     ...r, d, v, b,
     a: d / v,                  // free-flow time (s)
-    hh: CAR + GAP + v * T_H,   // space per human car at speed (m)
-    ha: CAR + GAP + v * T_A,   // space per AV at speed (m)
-    nbar: b / (CAR + GAP),     // jam density (cars/m)
+    hh: CAR + v * T_H,         // space per moving human car: length + headway x speed (m)
+    ha: CAR + v * T_A,         // space per moving AV (m)
+    nbar: b / (CAR + GAP),     // jam density (cars/m): stopped cars keep the 2 m minimum gap
   };
 }
 
@@ -71,8 +72,9 @@ function choiceShares(latSec, prices, walkMin, riders) {
     (prices[i] > prices[j] + 0.001 && ti >= tj - 1) ||
     (prices[i] >= prices[j] - 0.001 && ti > tj + 1))));
   for (const vot of riders) {
-    const r = latSec.map((t, i) => dominated[i] ? -Infinity : -(vot * t / 60 + prices[i]));
-    r.push(-(vot * walkMin));
+    // Paper Sec. IV-A reward: r = -ω1·time - ω2·price, walking -ζ·time; here ω2 = PRICE_W, ω1 = ζ = vot·ω2
+    const r = latSec.map((t, i) => dominated[i] ? -Infinity : -PRICE_W * (vot * t / 60 + prices[i]));
+    r.push(-PRICE_W * vot * walkMin);
     const m = Math.max(...r);
     const e = r.map(x => Math.exp(x - m));
     const Z = e.reduce((A, B) => A + B, 0);
