@@ -62,6 +62,7 @@ h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.02; font-weight: 800; let
 .cite a:hover { color: var(--ink); }
 .preset { display: flex; flex-direction: column; gap: 4px; min-width: 240px; }
 .preset label { font-weight: 600; font-size: 14px; }
+.preset select + label { margin-top: 8px; }
 select {
   font: inherit; font-weight: 600; color: var(--ink); background: var(--surface);
   border: 1.5px solid var(--rule); border-radius: 6px; padding: 8px 10px;

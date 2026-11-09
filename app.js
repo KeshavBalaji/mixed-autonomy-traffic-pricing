@@ -1,36 +1,47 @@
 const PRESETS = {
   shines: {
     desc: "Two short roads congest while a long road has room to spare.",
-    roads: [{ km: 4, kmh: 40, lanes: 1 }, { km: 6, kmh: 50, lanes: 1 }, { km: 14, kmh: 70, lanes: 2 }],
-    humans: 30, avs: 40, vot: 24, walkMin: 45, prices: [6, 6, 6],
+    roads: {
+      3: [{ km: 4, kmh: 40, lanes: 1 }, { km: 6, kmh: 50, lanes: 1 }, { km: 14, kmh: 70, lanes: 2 }],
+      4: [{ km: 4, kmh: 40, lanes: 1 }, { km: 6, kmh: 50, lanes: 1 }, { km: 9, kmh: 60, lanes: 1 }, { km: 14, kmh: 70, lanes: 2 }],
+    },
+    humans: 30, avs: 40, vot: 24, walkMin: 45, price: 6,
   },
   little: {
     desc: "Traffic is light, so the fastest road can carry almost everyone.",
-    roads: [{ km: 5, kmh: 50, lanes: 2 }, { km: 7, kmh: 60, lanes: 1 }, { km: 10, kmh: 70, lanes: 1 }],
-    humans: 12, avs: 12, vot: 24, walkMin: 50, prices: [6, 6, 6],
+    roads: {
+      3: [{ km: 5, kmh: 50, lanes: 2 }, { km: 7, kmh: 60, lanes: 1 }, { km: 10, kmh: 70, lanes: 1 }],
+      4: [{ km: 5, kmh: 50, lanes: 2 }, { km: 7, kmh: 60, lanes: 1 }, { km: 8, kmh: 60, lanes: 1 }, { km: 10, kmh: 70, lanes: 1 }],
+    },
+    humans: 12, avs: 12, vot: 24, walkMin: 50, price: 6,
   },
   walks: {
     desc: "Trips are short, so walking competes with paying for a ride.",
-    roads: [{ km: 1.2, kmh: 30, lanes: 1 }, { km: 1.8, kmh: 40, lanes: 1 }, { km: 2.4, kmh: 50, lanes: 1 }],
-    humans: 6, avs: 20, vot: 24, walkMin: 14, prices: [8, 8, 8],
+    roads: {
+      3: [{ km: 1.2, kmh: 30, lanes: 1 }, { km: 1.8, kmh: 40, lanes: 1 }, { km: 2.4, kmh: 50, lanes: 1 }],
+      4: [{ km: 1.2, kmh: 30, lanes: 1 }, { km: 1.8, kmh: 40, lanes: 1 }, { km: 2.1, kmh: 45, lanes: 1 }, { km: 2.4, kmh: 50, lanes: 1 }],
+    },
+    humans: 6, avs: 20, vot: 24, walkMin: 14, price: 8,
   },
 };
 
 const $ = id => document.getElementById(id);
-const state = { preset: "shines", prices: [6, 6, 6], humans: 30, avs: 40, vot: 24, theta: 5 };
+const state = { preset: "shines", nroads: 3, prices: [6, 6, 6], humans: 30, avs: 40, vot: 24, theta: 5 };
 let scenario, riders, out;
 
 function buildScenario() {
   const p = PRESETS[state.preset];
-  scenario = { roads: p.roads.map(makeRoad), humans: state.humans, avs: state.avs, walkMin: p.walkMin };
+  scenario = { roads: p.roads[state.nroads].map(makeRoad), humans: state.humans, avs: state.avs, walkMin: p.walkMin };
   riders = makeRiders(state.vot / 60);
 }
 
 /* ---------- Road drawing ---------- */
 const NS = "http://www.w3.org/2000/svg";
 const svg = $("roads");
-const X0 = 70, X1 = 930, Y = 392;
-const HEIGHTS = [26, 150, 290];
+const X0 = 70, X1 = 930;
+// Arc heights per road count; 4 roads need a taller drawing so each sign clears the road above
+const LAYOUT = { 3: { Y: 392, H: 430, heights: [26, 150, 290] }, 4: { Y: 432, H: 470, heights: [26, 124, 222, 320] } };
+let Y = LAYOUT[3].Y, HEIGHTS = LAYOUT[3].heights;
 const roadEls = [];
 
 function arcPath(h) {
@@ -43,6 +54,9 @@ function el(name, attrs, parent) {
   return e;
 }
 function drawRoads() {
+  ({ Y, heights: HEIGHTS } = LAYOUT[state.nroads]);
+  svg.setAttribute("viewBox", `0 0 1000 ${LAYOUT[state.nroads].H}`);
+  $("roadfield").setAttribute("aria-label", `${state.nroads === 4 ? "Four" : "Three"} parallel roads between the same start and end, with cars flowing on each`);
   svg.innerHTML = "";
   roadEls.length = 0;
   // end plazas
@@ -83,6 +97,7 @@ function mix(c1, c2, t) {
 /* ---------- Animated cars ---------- */
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const JAM_SPACING_PX = 12;   // dot spacing on screen when a road is bumper-to-bumper
+const PX_PER_KMH = 2;        // on-screen dot speed: 70 km/h ~ 140 px/s
 let lastT = performance.now();
 
 // Dots reflect real density: cars on road = flow x travel time; density = that / road length.
@@ -126,8 +141,10 @@ function frame(now) {
   lastT = now;
   if (out && out.feasible && !reduceMotion) {
     roadEls.forEach((r, i) => {
-      const tripSeconds = out.lat[i] / 60 * 0.9;   // 1 simulated minute ~ 0.9 real seconds
-      r.dots.forEach(d => { d.t += dt / tripSeconds; if (d.t > 1) d.t -= 1; });
+      // Dots move at the road's real speed (length / travel time), so jams visibly crawl
+      const kmh = scenario.roads[i].km / (out.lat[i] / 3600);
+      const step = dt * kmh * PX_PER_KMH / r.len;
+      r.dots.forEach(d => { d.t += step; if (d.t > 1) d.t -= 1; });
       placeDots(r);
     });
   }
@@ -197,6 +214,8 @@ function renderResults() {
     else if (pct > 0) deltaHtml = `<span class="delta good">${pct.toFixed(0)}% faster than selfish routing</span>`;
     else deltaHtml = `<span class="delta bad">${(-pct).toFixed(0)}% slower than selfish routing</span>`;
     baseRow = `<div class="bar-row"><span>Everyone takes the fastest road</span><div class="bar"><i style="width:${base / maxV * 100}%;background:var(--muted)"></i></div><b>${fmtMin(base)} min</b></div>`;
+  } else {
+    baseRow = `<div class="bar-row"><span>Selfish baseline</span><span>can’t fit this many cars</span><b></b></div>`;
   }
   box.innerHTML = `
     <div class="headline"><span class="big">${fmtMin(avg)} min</span>${deltaHtml}</div>
@@ -223,7 +242,7 @@ function update() {
 
 function loadPreset(name) {
   const p = PRESETS[name];
-  Object.assign(state, { preset: name, prices: p.prices.slice(), humans: p.humans, avs: p.avs, vot: p.vot });
+  Object.assign(state, { preset: name, prices: new Array(state.nroads).fill(p.price), humans: p.humans, avs: p.avs, vot: p.vot });
   $("presetDesc").textContent = p.desc;
   $("optStatus").textContent = "";
   buildScenario();
@@ -234,6 +253,7 @@ function loadPreset(name) {
 
 /* ---------- Events ---------- */
 $("preset").addEventListener("change", e => loadPreset(e.target.value));
+$("nroads").addEventListener("change", e => { state.nroads = +e.target.value; drawRoads(); loadPreset(state.preset); });
 [["humans", "humans"], ["avs", "avs"], ["vot", "vot"], ["theta", "theta"]].forEach(([id, key]) =>
   $(id).addEventListener("input", e => { state[key] = +e.target.value; if (key !== "theta") $("optStatus").textContent = ""; update(); }));
 
@@ -248,7 +268,7 @@ $("optBtn").addEventListener("click", () => {
     if (!best) { $("optStatus").textContent = "No prices fit these roads and the fuel-cost rule. Lower demand and try again."; return; }
     state.prices = best;
     update();
-    $("optStatus").textContent = `Prices set to ${best.map(money).join(", ")} for roads 1 to 3. Served ${(out.servedShare * 100).toFixed(0)}% of riders.`;
+    $("optStatus").textContent = `Prices set to ${best.map(money).join(", ")} for roads 1 to ${best.length}. Served ${(out.servedShare * 100).toFixed(0)}% of riders.`;
   }, 30);
 });
 

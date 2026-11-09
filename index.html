@@ -24,11 +24,16 @@
         <option value="little">Little room to improve</option>
         <option value="walks">Short trips</option>
       </select>
+      <label for="nroads">Roads</label>
+      <select id="nroads">
+        <option value="3">3 roads</option>
+        <option value="4">4 roads</option>
+      </select>
       <p class="preset-desc" id="presetDesc"></p>
     </div>
   </header>
 
-  <div class="roadfield" role="img" aria-label="Three parallel roads between the same start and end, with cars flowing on each">
+  <div class="roadfield" id="roadfield" role="img" aria-label="Three parallel roads between the same start and end, with cars flowing on each">
     <svg id="roads" viewBox="0 0 1000 430" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="walkers" id="walkers"></div>
   </div>
