@@ -60,15 +60,15 @@ function drawRoads() {
   svg.innerHTML = "";
   roadEls.length = 0;
   // end plazas
-  el("circle", { cx: X0, cy: Y, r: 16, fill: "#3A434D" });
-  el("circle", { cx: X1, cy: Y, r: 16, fill: "#3A434D" });
-  const tS = el("text", { x: X0, y: Y + 34, "text-anchor": "middle", fill: "#C9D0D6", "font-size": 15, "font-weight": 600 }); tS.textContent = "Start";
-  const tE = el("text", { x: X1, y: Y + 34, "text-anchor": "middle", fill: "#C9D0D6", "font-size": 15, "font-weight": 600 }); tE.textContent = "Downtown";
+  el("circle", { cx: X0, cy: Y, r: 16, fill: "#2B2B2B" });
+  el("circle", { cx: X1, cy: Y, r: 16, fill: "#2B2B2B" });
+  const tS = el("text", { x: X0, y: Y + 34, "text-anchor": "middle", class: "map-label", "font-size": 15, "font-weight": 600 }); tS.textContent = "Start";
+  const tE = el("text", { x: X1, y: Y + 34, "text-anchor": "middle", class: "map-label", "font-size": 15, "font-weight": 600 }); tE.textContent = "Downtown";
   HEIGHTS.forEach((h, i) => {
     const d = arcPath(h);
-    const edge = el("path", { d, fill: "none", stroke: "#22A06B", "stroke-width": 30, "stroke-linecap": "round" });
-    el("path", { d, fill: "none", stroke: "#3B444E", "stroke-width": 22, "stroke-linecap": "round" });
-    el("path", { d, fill: "none", stroke: "#E9B53A", "stroke-width": 1.6, "stroke-dasharray": "10 12", opacity: 0.75 });
+    const edge = el("path", { d, fill: "none", stroke: "#6E8B3D", "stroke-width": 30, "stroke-linecap": "round" });
+    el("path", { d, fill: "none", stroke: "#353535", "stroke-width": 22, "stroke-linecap": "round" });
+    el("path", { d, fill: "none", stroke: "#BDBDBD", "stroke-width": 1.6, "stroke-dasharray": "10 12", opacity: 0.75 });
     const path = el("path", { d, fill: "none", stroke: "none" });
     const g = el("g", {});
     roadEls.push({ edge, path, len: 0, dotsG: g, dots: [] });
@@ -78,11 +78,11 @@ function drawRoads() {
     const mid = roadEls[i].path.getPointAtLength(roadEls[i].path.getTotalLength() / 2);
     const w = 176, hgt = 58;
     const g = el("g", { transform: `translate(${mid.x - w / 2}, ${mid.y - hgt - 22})` });
-    el("rect", { width: w, height: hgt, rx: 7, fill: "#0E6B4A", stroke: "#FFFFFF", "stroke-width": 2 }, g);
-    const t1 = el("text", { x: 10, y: 22, fill: "#FFFFFF", "font-size": 15, "font-weight": 800 }, g);
-    const t2 = el("text", { x: 10, y: 46, fill: "#FFFFFF", "font-size": 19, "font-weight": 800 }, g);
-    const t3 = el("text", { x: w - 10, y: 46, fill: "#FFE7A3", "font-size": 19, "font-weight": 800, "text-anchor": "end" }, g);
-    const t4 = el("text", { x: w - 10, y: 22, fill: "#CFE9DD", "font-size": 13, "font-weight": 600, "text-anchor": "end" }, g);
+    el("rect", { width: w, height: hgt, rx: 7, fill: "#1F1E1D", stroke: "#FFFFFF", "stroke-width": 2 }, g);
+    const t1 = el("text", { x: 10, y: 22, fill: "#FFFFFF", "font-size": 15, "font-weight": 600 }, g);
+    const t2 = el("text", { x: 10, y: 46, fill: "#FFFFFF", "font-size": 19, "font-weight": 600 }, g);
+    const t3 = el("text", { x: w - 10, y: 46, fill: "#E9B65A", "font-size": 19, "font-weight": 600, "text-anchor": "end" }, g);
+    const t4 = el("text", { x: w - 10, y: 22, fill: "#C8C8C8", "font-size": 13, "font-weight": 600, "text-anchor": "end" }, g);
     Object.assign(roadEls[i], { plateName: t1, plateTime: t2, platePrice: t3, plateState: t4 });
     t1.textContent = `Road ${i + 1}`;
   });
@@ -116,7 +116,7 @@ function syncDots() {
   roadEls.forEach((r, i) => {
     const { n, avShare } = targetDots(i);
     while (r.dots.length < n) {
-      const c = el("circle", { r: 5.2, stroke: "#1E242A", "stroke-width": 1.2 }, r.dotsG);
+      const c = el("circle", { r: 5.2, stroke: "#1F1F1F", "stroke-width": 1.2 }, r.dotsG);
       r.dots.push({ c, t: Math.random(), av: Math.random() < avShare });
     }
     while (r.dots.length > n) r.dots.pop().c.remove();
@@ -125,7 +125,7 @@ function syncDots() {
     r.dots.forEach((d, k) => (d.t = (off + k / Math.max(1, n)) % 1));
     if (reduceMotion) r.dots.forEach((d, k) => (d.t = (k + 0.5) / Math.max(1, n)));
     r.dots.forEach((d, k) => (d.av = Math.floor((k + 1) * avShare + 0.5) > Math.floor(k * avShare + 0.5)));
-    r.dots.forEach(d => d.c.setAttribute("fill", d.av ? "#63C7FF" : "#F2F4F6"));
+    r.dots.forEach(d => d.c.setAttribute("fill", d.av ? "#E2A53A" : "#FFFFFF"));
     placeDots(r);
   });
 }
@@ -186,12 +186,12 @@ function syncInputs() {
 function renderRoads() {
   roadEls.forEach((r, i) => {
     r.platePrice.textContent = money(state.prices[i]);
-    if (!out.feasible) { r.plateTime.textContent = "—"; r.plateState.textContent = ""; r.edge.setAttribute("stroke", "#8A939C"); return; }
+    if (!out.feasible) { r.plateTime.textContent = "—"; r.plateState.textContent = ""; r.edge.setAttribute("stroke", "#9A9A9A"); return; }
     const lat = out.lat[i], a = scenario.roads[i].a;
     const congested = lat > a + 0.5;
     r.plateTime.textContent = fmtMin(lat) + " min";
     const sev = Math.min(1, (lat / a - 1) / 0.8);
-    r.edge.setAttribute("stroke", congested ? mix("F29A9A", "B3202A", sev) : "#22A06B");
+    r.edge.setAttribute("stroke", congested ? mix("D98C74", "9E3A22", sev) : "#6E8B3D");
     r.plateState.textContent = congested ? "congested" : "flowing";
   });
 }
