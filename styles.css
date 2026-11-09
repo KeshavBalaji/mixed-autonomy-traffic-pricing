@@ -58,7 +58,7 @@ body {
 
 header.top { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
 h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.02; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 6px; }
-.lede { margin: 0; color: var(--muted); max-width: 60ch; font-style: italic; }
+.lede { margin: 0; color: var(--muted); max-width: 60ch; }
 .cite { margin: 8px 0 0; color: var(--muted); font-size: 13px; max-width: 72ch; }
 .cite a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .cite a:hover { color: var(--ink); }
@@ -69,7 +69,7 @@ select {
   font: inherit; color: var(--ink); background: var(--surface);
   border: 1.5px solid var(--rule); border-radius: 6px; padding: 8px 10px;
 }
-.preset-desc { font-size: 14px; color: var(--muted); margin: 0; max-width: 34ch; font-style: italic; }
+.preset-desc { font-size: 14px; color: var(--muted); margin: 0 0 8px; max-width: 34ch; font-style: italic; }
 
 /* Road panel */
 .roadfield { background: var(--asphalt); border-radius: 10px; overflow-x: auto; overflow-y: hidden; position: relative; border: 1px solid var(--asphalt-edge); }

@@ -64,17 +64,19 @@ function makeRiders(medianVOT, n = 80, seed = 7) {
 }
 
 // Logit choice shares: options = roads + walk (last index)
-function choiceShares(latSec, prices, walkMin, riders) {
+function choiceShares(latSec, prices, walkMin, riders, walkFactor = 1, dominance = true) {
   const n = latSec.length;
   const q = new Array(n + 1).fill(0);
-  // Paper Sec. IV-A: a road no faster and no cheaper than another (and worse on one) is never chosen
+  // Paper Sec. IV-A: a road no faster and no cheaper than another (and worse on one) is never chosen.
+  // dominance = false drops that rule (plain logit), so shares change smoothly when roads tie.
   const dominated = latSec.map((ti, i) => latSec.some((tj, j) => j !== i && (
     (prices[i] > prices[j] + 0.001 && ti >= tj - 1) ||
     (prices[i] >= prices[j] - 0.001 && ti > tj + 1))));
   for (const vot of riders) {
-    // Paper Sec. IV-A reward: r = -ω1·time - ω2·price, walking -ζ·time; here ω2 = PRICE_W, ω1 = ζ = vot·ω2
-    const r = latSec.map((t, i) => dominated[i] ? -Infinity : -PRICE_W * (vot * t / 60 + prices[i]));
-    r.push(-PRICE_W * vot * walkMin);
+    // Paper Sec. IV-A reward: r = -ω1·time - ω2·price, walking -ζ·time; here ω2 = PRICE_W,
+    // ω1 = vot·ω2, and ζ = walkFactor·ω1 (walkFactor 1: walking time counts like riding time)
+    const r = latSec.map((t, i) => dominance && dominated[i] ? -Infinity : -PRICE_W * (vot * t / 60 + prices[i]));
+    r.push(-walkFactor * PRICE_W * vot * walkMin);
     const m = Math.max(...r);
     const e = r.map(x => Math.exp(x - m));
     const Z = e.reduce((A, B) => A + B, 0);
@@ -86,13 +88,13 @@ function choiceShares(latSec, prices, walkMin, riders) {
 // Direct solve of the paper's constraints (14)-(19). Roads 1..k share travel time L (humans
 // use them, selfishly); roads after k run empty of humans at free-flow time. The first k
 // with a solution, and the lowest L within it, is the best selfish outcome.
-function solveEquilibrium(roads, prices, walkMin, riders, lamH, lamA) {
+function solveEquilibrium(roads, prices, walkMin, riders, lamH, lamA, walkFactor = 1, dominance = true) {
   const n = roads.length;
   for (let k = 0; k < n; k++) {
     // Everything that depends on L. Returns null if L breaks a constraint.
     const at = (L, roadKFree) => {
       const lat = roads.map((r, i) => (i <= k ? L : r.a));
-      const q = choiceShares(lat, prices, walkMin, riders);
+      const q = choiceShares(lat, prices, walkMin, riders, walkFactor, dominance);
       const fa = q.slice(0, n).map(x => x * lamA);
       for (let i = k + 1; i < n; i++) if (fa[i] * roads[i].ha > roads[i].v * roads[i].b) return null; // AV capacity
       const fh = new Array(n).fill(0);
@@ -186,7 +188,7 @@ function simulate(sc, prices, riders, withBaseline = true) {
   const roads = sc.roads;
   const n = roads.length;
   const lamH = sc.humans / 60, lamA = sc.avs / 60;
-  const res = solveEquilibrium(roads, prices, sc.walkMin, riders, lamH, lamA);
+  const res = solveEquilibrium(roads, prices, sc.walkMin, riders, lamH, lamA, sc.walkFactor ?? 1, sc.dominance ?? true);
   if (!res) return { feasible: false };   // no consistent outcome at these prices
   const { fa, q } = res, turnedAway = 0;
   const served = fa.reduce((A, B) => A + B, 0);
